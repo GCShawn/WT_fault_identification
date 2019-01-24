@@ -1,4 +1,5 @@
 import pandas as pd
+from sklearn.metrics import classification_report, confusion_matrix
 # Custom functions: 
 from data_labelling import data_labels #labelling data
 from features_selection import feature_selection
@@ -14,19 +15,11 @@ warning_data_wec = pd.read_csv('data/warning_data_wec.csv')
 
 ##### Data Labelling #####
 output_nf = pd.DataFrame (columns = scada_data.columns) #always keep nofault dataset
-output_nf = data_labels(scada_data, status_data_rtu, status_data_wec, warning_data_rtu, warning_data_wec, 
-                 'no faults')
+output_nf = data_labels(scada_data, status_data_rtu, status_data_wec, warning_data_rtu, warning_data_wec, 'no faults')
 
 fault_input = input(" Enter the fault. Options are: all faults, fault 62, fault 80, fault 228, fault 60, fault 9: ")
-
-output_faults = pd.DataFrame (columns = scada_data.columns) # this one will take either 'all-faults' or 'specific fault: #'
-output_faults = data_labels(scada_data, status_data_rtu, status_data_wec, warning_data_rtu, warning_data_wec, 
-                 fault_input)
-
-# If we want specific fault then enter the specific fault as the string:
-# fault 62 for Feeding fault; fault 80 for excitation error; fault 228 for malfunction aircooling; fault 60 for mains failure
-#output_faults = data_labels(scada_data, status_data_rtu, status_data_wec, warning_data_rtu, warning_data_wec, 
-#                 'fault 9')
+output_faults = pd.DataFrame (columns = scada_data.columns) # this one will take either 
+output_faults = data_labels(scada_data, status_data_rtu, status_data_wec, warning_data_rtu, warning_data_wec, fault_input)
 
 ##### Feature Selection #####
 # We will normalize the dataset here as well
@@ -71,5 +64,8 @@ final_data_set = preparation_for_splitting (output_nfs_rec_array, output_ffs, ou
 X_train, y_train, X_test, y_test = split (final_data_set, 'all faults', 'balanced')
 
 ##### Training a model #####
-# First argument is string: Decision Tree, SVM
-clfreport, best_param, cm = model_train('Decision Tree', X_train, y_train, X_test, y_test)
+# First argument is string: Decision Tree or SVM
+y_pred, best_param = model_train('SVM', X_train, y_train, X_test, y_test)
+labels = ['no-fault','fault']
+clfreport = classification_report(y_test, y_pred, target_names=labels)
+cm = confusion_matrix(y_test, y_pred)
